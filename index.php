@@ -36,11 +36,13 @@ if(!empty($_POST)) {
 }
 
 //投稿を取得する！
-$page = $_REQUEST['page'];
-if($page == '') {
+if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
     $page = 1;
+} else {
+    $page = $_REQUEST['page'];
 }
 $page = max($page, 1);
+
 
 //最終ページを取得する
 $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
@@ -91,6 +93,7 @@ function makeLink($value) {
     <h1>ひとこと掲示板</h1>
     </div>
     <div id="content">
+    <div style="text-align: right"><a href="logout.php">ログアウト</a></div>
         <form action="" method="post">
         <dl>
             <dt><?php echo h($member['name']); ?>さん、メッセージをどうぞ！</dt>
