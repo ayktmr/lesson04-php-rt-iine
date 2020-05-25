@@ -126,6 +126,10 @@ function makeLink($value) {
                 [<a href="delete.php?id=<?php echo h($post['id']); ?>" style="color:#f33;">削除</a>]
 
             <?php endif; ?>
+
+            <p class="like_rt">
+                <a href="index.php">Like!</a>　<a href="index.php">Retweet</a>
+            </p>
         
         </p>
         </div>

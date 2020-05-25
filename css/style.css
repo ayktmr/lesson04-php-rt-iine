@@ -148,3 +148,14 @@ div .msg:after {
 	font-size: 80%;
 	color: #999;
 }
+p.like_rt {
+	height: 80%;
+}
+p.like_rt a{
+	text-decoration: none;
+	background-color: #87cefa;
+	color: #fff;
+	font-size: 80%;
+	padding: 0 5px;
+	border-radius: 3px;
+}
