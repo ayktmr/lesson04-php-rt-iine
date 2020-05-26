@@ -65,6 +65,41 @@ if(isset($_REQUEST['res'])) {
     $message = '@' . $table['name'] . ' ' . $table['message'];
 }
 
+//ineの場合！
+if(isset($_REQUEST['ine'])) {
+    //ineされたposts_idに対し、ログイン者が過去にineしてるか確認
+    $ines = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
+    $ines->execute(array($_REQUEST['ine'],$member['id']));
+    $ine = $ines->fetch();
+
+    //rt_ineした事がある
+    if($ine){
+        //現在のineの値を確認し、スイッチさせる
+        if($ine['ine'] == 1) {
+            $ine = $db->prepare('UPDATE rt_ine SET ine=0, created=NOW() WHERE member_id=? AND posts_id=?');
+            $ine->execute(array(
+                $member['id'],
+                $_REQUEST['ine']
+            ));
+        } else {
+            $ine = $db->prepare('UPDATE rt_ine SET ine=1, created=NOW() WHERE member_id=? AND posts_id=?');
+            $ine->execute(array(
+                $member['id'],
+                $_REQUEST['ine']
+            ));
+        }
+    //rt_ineした事がない
+    } else {
+        //レコード追加
+        $ines = $db->prepare('INSERT INTO rt_ine SET member_id=?, posts_id=?,rt=0,ine=1,created=NOW()');
+        $ines->execute(array(
+            $member['id'],
+            $_REQUEST['ine']
+        ));
+    }
+}
+
+
 // htmlspecialcharsのショートカット
 function h($value) {
     return htmlspecialchars($value, ENT_QUOTES);
@@ -128,7 +163,7 @@ function makeLink($value) {
             <?php endif; ?>
 
             <p class="like_rt">
-                <a href="index.php">Like!</a>　<a href="index.php">Retweet</a>
+                <a href="index.php?ine=<?php echo h($post['id']); ?>">Like! 1</a>　<a href="index.php?rt=<?php echo h($post['id']); ?>">Retweet 1</a>
             </p>
         
         </p>
