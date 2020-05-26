@@ -16,62 +16,13 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
     exit();
 }
 
-//投稿を記録する！
-if(!empty($_POST)) {
-    if(isset($_POST['message'])) {
-        //reply_post_idがnullなら０を入れる(DBに登録できない為)
-        if(is_null($_POST['reply_post_id']) OR isset($_POST['reply_post_id'])){ 
-            $_POST['reply_post_id'] = 0;
-        }
-        $message = $db->prepare('INSERT INTO posts SET member_id=?, message=?, reply_post_id=?, created=NOW()');
-        $message->execute(array(
-            $member['id'],
-            $_POST['message'],
-            $_POST['reply_post_id']
-        ));
 
-        header('Location: index.php');
-        exit();
-    }
-}
-
-//投稿を取得する！
-if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
-    $page = 1;
-} else {
-    $page = $_REQUEST['page'];
-}
-$page = max($page, 1);
-
-
-//最終ページを取得する
-$counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
-$cnt = $counts->fetch();
-$maxPage = ceil($cnt['cnt'] / 5);
-$page = min($page, $maxPage);
-
-$start = ($page - 1) * 5;
-
-$posts = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id ORDER BY p.created DESC LIMIT ?, 5');
-$posts->bindParam(1, $start, PDO::PARAM_INT);
-$posts->execute();
-
-//返信の場合！
-if(isset($_REQUEST['res'])) {
-    $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
-    $response->execute(array($_REQUEST['res']));
-
-    $table = $response->fetch();
-    $message = '@' . $table['name'] . ' ' . $table['message'];
-}
-
-//ineの場合！
+//「いいね」ボタン押した時！
 if(isset($_REQUEST['ine'])) {
     //ineされたposts_idに対し、ログイン者が過去にineしてるか確認
     $ines = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
     $ines->execute(array($_REQUEST['ine'],$member['id']));
     $ine = $ines->fetch();
-
     //rt_ineした事がある
     if($ine){
         //現在のineの値を確認し、スイッチさせる
@@ -100,6 +51,81 @@ if(isset($_REQUEST['ine'])) {
 }
 
 
+
+//投稿を記録する！
+if(!empty($_POST)) {
+    if(isset($_POST['message'])) {
+        //reply_post_idがnullなら０を入れる(DBに登録できない為)
+        if(is_null($_POST['reply_post_id']) OR isset($_POST['reply_post_id'])){ 
+            $_POST['reply_post_id'] = 0;
+        }
+        $message = $db->prepare('INSERT INTO posts SET member_id=?, message=?, reply_post_id=?, created=NOW()');
+        $message->execute(array(
+            $member['id'],
+            $_POST['message'],
+            $_POST['reply_post_id']
+        ));
+
+        header('Location: index.php');
+        exit();
+    }
+}
+
+//投稿を取得する！
+if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
+    $page = 1;
+} else {
+    $page = $_REQUEST['page'];
+}
+$page = max($page, 1);
+
+    //最終ページを取得する
+    $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
+    $cnt = $counts->fetch();
+    $maxPage = ceil($cnt['cnt'] / 5);
+    $page = min($page, $maxPage);
+
+    $start = ($page - 1) * 5;
+
+//投稿取得の続き-いいね＆リツイート数のカウント取得(３つのテーブルのリレーションP192参照)
+$posts = $db->prepare(
+    'SELECT 
+        m.name,
+        m.picture,
+        p.id,
+        p.message,
+        p.member_id,
+        p.reply_post_id,
+        p.created,
+        p.modified,
+        SUM(r.rt) AS rt_count,
+        SUM(r.ine) AS ine_count
+     FROM 
+        members m,
+        posts p LEFT JOIN rt_ine r ON p.id=r.posts_id
+     WHERE 
+        m.id=p.member_id
+     GROUP BY 
+        p.id
+     ORDER BY p.created
+     DESC LIMIT ?, 5'
+     );
+$posts->bindParam(1, $start, PDO::PARAM_INT);
+$posts->execute();
+
+
+//返信の場合！
+if(isset($_REQUEST['res'])) {
+    $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
+    $response->execute(array($_REQUEST['res']));
+
+    $table = $response->fetch();
+    $message = '@' . $table['name'] . ' ' . $table['message'];
+}
+
+
+
+
 // htmlspecialcharsのショートカット
 function h($value) {
     return htmlspecialchars($value, ENT_QUOTES);
@@ -110,6 +136,9 @@ function makeLink($value) {
     return mb_ereg_replace("(https?)(://[[:alnum;]\+\$\;\?\.%,!#~*/:@&=_-]+)", '<A HREF="\1\2">\1\2</a>', $value);
 }
 ?>
+
+
+
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -163,7 +192,7 @@ function makeLink($value) {
             <?php endif; ?>
 
             <p class="like_rt">
-                <a href="index.php?ine=<?php echo h($post['id']); ?>">Like! 1</a>　<a href="index.php?rt=<?php echo h($post['id']); ?>">Retweet 1</a>
+                <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>">Like! <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>">Retweet 1</a>
             </p>
         
         </p>
