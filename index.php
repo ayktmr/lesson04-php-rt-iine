@@ -114,6 +114,28 @@ $posts->bindParam(1, $start, PDO::PARAM_INT);
 $posts->execute();
 
 
+//ログイン者が「いいね」した投稿を取得（自分がアクション済の色を変えるクラス指定に使用）
+
+    $ine_posts = $db->prepare('SELECT id, member_id, posts_id, rt, ine FROM rt_ine WHERE ine=1 && member_id=?');
+    $ine_posts->execute(array(
+        $member['id']
+    ));
+        //自分がいいねしたポストのIDを変数に代入
+        $ine_posts_id = "(\$post['id'] ==";
+        while ($ine_post = $ine_posts->fetch(PDO::FETCH_ASSOC)) {
+            print_r($ine_post);
+            $ine_posts_id .= $ine_post['posts_id'] . ")" . " || (\$post['id'] == ";
+        }
+        $cut = 19;
+        $ine_posts_id = substr($ine_posts_id, 0, strlen($ine_posts_id)-$cut);
+        print($ine_posts_id);
+
+        // header('Location: index.php');
+        // exit();
+
+
+
+
 //返信の場合！
 if(isset($_REQUEST['res'])) {
     $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
@@ -122,8 +144,6 @@ if(isset($_REQUEST['res'])) {
     $table = $response->fetch();
     $message = '@' . $table['name'] . ' ' . $table['message'];
 }
-
-
 
 
 // htmlspecialcharsのショートカット
@@ -173,30 +193,30 @@ function makeLink($value) {
 
         <?php foreach ($posts as $post): ?>
 
-        <div class="msg">
-            <img src="member_picture/<?php echo h($post['picture']); ?>" width="48" height="48" alt="<?php echo h($post['name']); ?>" />
-            <p><?php echo makeLink(h($post['message'])); ?><span class="name">（<?php echo h($post['name']); ?>）</span>
-            [<a href="index.php?res=<?php echo h($post['id']); ?>">Re</a>]</p>
-            <p class="day"><a href="view.php?id=<?php echo h($post['id']); ?>"><?php echo h($post['created']); ?></a>
-        
-            <?php if($post['reply_post_id'] > 0): ?>
+            <div class="msg">
+                <img src="member_picture/<?php echo h($post['picture']); ?>" width="48" height="48" alt="<?php echo h($post['name']); ?>" />
+                <p><?php echo makeLink(h($post['message'])); ?><span class="name">（<?php echo h($post['name']); ?>）</span>
+                [<a href="index.php?res=<?php echo h($post['id']); ?>">Re</a>]</p>
+                <p class="day"><a href="view.php?id=<?php echo h($post['id']); ?>"><?php echo h($post['created']); ?></a>
+            
+                <?php if($post['reply_post_id'] > 0): ?>
 
-                <a href="view.php?id=<?php echo h($post['reply_post_id']); ?>">返信元のメッセージ</a>
+                    <a href="view.php?id=<?php echo h($post['reply_post_id']); ?>">返信元のメッセージ</a>
 
-            <?php endif; ?>
+                <?php endif; ?>
 
-            <?php if($_SESSION['id'] == $post['member_id']): ?>
+                <?php if($_SESSION['id'] == $post['member_id']): ?>
 
-                [<a href="delete.php?id=<?php echo h($post['id']); ?>" style="color:#f33;">削除</a>]
+                    [<a href="delete.php?id=<?php echo h($post['id']); ?>" style="color:#f33;">削除</a>]
 
-            <?php endif; ?>
+                <?php endif; ?>
 
-            <p class="like_rt">
-                <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>">Like! <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>">Retweet 1</a>
+                <p class="like_rt">
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if($ine_posts_id): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet 1</a>
+                </p>
+            
             </p>
-        
-        </p>
-        </div>
+            </div>
 
         <?php endforeach; ?>
 
