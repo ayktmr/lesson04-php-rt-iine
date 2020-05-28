@@ -114,25 +114,14 @@ $posts->bindParam(1, $start, PDO::PARAM_INT);
 $posts->execute();
 
 
-//ログイン者が「いいね」した投稿を取得（自分がアクション済の色を変えるクラス指定に使用）
-
-    $ine_posts = $db->prepare('SELECT id, member_id, posts_id, rt, ine FROM rt_ine WHERE ine=1 && member_id=?');
+//ログイン者が「いいね」した投稿IDとポストIDを取得（自分がアクション済の色を変えるクラス指定に使用）
+    $ine_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE ine=1 && member_id=?');
     $ine_posts->execute(array(
         $member['id']
     ));
-        //自分がいいねしたポストのIDを変数に代入
-        $ine_posts_id = "(\$post['id'] ==";
-        while ($ine_post = $ine_posts->fetch(PDO::FETCH_ASSOC)) {
-            print_r($ine_post);
-            $ine_posts_id .= $ine_post['posts_id'] . ")" . " || (\$post['id'] == ";
-        }
-        $cut = 19;
-        $ine_posts_id = substr($ine_posts_id, 0, strlen($ine_posts_id)-$cut);
-        print($ine_posts_id);
-
-        // header('Location: index.php');
-        // exit();
-
+        $rows = $ine_posts->fetchAll(PDO::FETCH_KEY_PAIR);
+        // print_r($rows);
+        // print($rows[11]);
 
 
 
@@ -212,7 +201,7 @@ function makeLink($value) {
                 <?php endif; ?>
 
                 <p class="like_rt">
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if($ine_posts_id): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet 1</a>
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet 1</a>
                 </p>
             
             </p>
