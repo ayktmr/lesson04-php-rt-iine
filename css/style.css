@@ -153,9 +153,15 @@ p.like_rt {
 }
 p.like_rt a{
 	text-decoration: none;
-	background-color: #87cefa;
+	background-color: #ccc;
 	color: #fff;
 	font-size: 80%;
 	padding: 0 5px;
 	border-radius: 3px;
+}
+p.like_rt a.done_ine {
+	background-color: #ff69b4;
+}
+p.like_rt a.done_rt {
+	background-color: #3cb371;
 }
