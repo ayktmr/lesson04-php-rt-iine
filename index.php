@@ -103,6 +103,7 @@ if(!empty($_POST)) {
         header('Location: index.php');
         exit();
     }
+
 }
 
 //投稿を取得する！
@@ -114,14 +115,22 @@ if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
 $page = max($page, 1);
 
     //最終ページを取得する
-    $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
-    $cnt = $counts->fetch();
-    $maxPage = ceil($cnt['cnt'] / 5);
+    // $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
+    $counts = $db->query(
+        'SELECT p.id, r.rt FROM members m, posts p LEFT JOIN rt_ine r ON p.id=r.posts_id WHERE m.id=p.member_id GROUP BY p.id, r.rt'
+    );
+    $counts->execute();
+    $countPage = $counts->rowCount();
+    $maxPage = ceil($countPage / 5);
     $page = min($page, $maxPage);
+    // $cnt = $counts->fetch();
+    // $maxPage = ceil($cnt['cnt'] / 5);
+    // $page = min($page, $maxPage);
 
     $start = ($page - 1) * 5;
 
-//投稿取得の続き-いいね＆リツイート数のカウント取得(３つのテーブルのリレーションP192参照)
+//投稿取得
+//・・・・＆いいね＆リツイート数のカウント取得(３つのテーブルのリレーションP192参照)
 $posts = $db->prepare(
     'SELECT 
         m.name,
@@ -132,6 +141,7 @@ $posts = $db->prepare(
         p.reply_post_id,
         p.created,
         p.modified,
+        r.rt,
         SUM(r.rt) AS rt_count,
         SUM(r.ine) AS ine_count
      FROM 
@@ -140,7 +150,7 @@ $posts = $db->prepare(
      WHERE 
         m.id=p.member_id
      GROUP BY 
-        p.id
+        p.id, r.rt
      ORDER BY p.created
      DESC LIMIT ?, 5'
      );
@@ -154,8 +164,6 @@ $posts->execute();
         $member['id']
     ));
         $rows = $ine_posts->fetchAll(PDO::FETCH_KEY_PAIR);
-        // print_r($rows);
-        // print($rows[11]);
 
 //ログイン者が「リツイート」した投稿IDとポストIDを取得（自分がアクション済の色を変えるクラス指定に使用）
     $rt_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE rt=1 && member_id=?');
@@ -163,6 +171,14 @@ $posts->execute();
         $member['id']
     ));
         $rt_rows = $rt_posts->fetchAll(PDO::FETCH_KEY_PAIR);
+
+//リツイートの場合
+if(isset($_REQUEST['rt'])){
+    $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
+    $response->execute(array(
+        $_REQUEST['rt']
+    ));
+}
 
 
 
