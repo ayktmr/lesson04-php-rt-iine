@@ -50,6 +50,40 @@ if(isset($_REQUEST['ine'])) {
     }
 }
 
+//「リツイート」ボタン押した時！
+if(isset($_REQUEST['rt'])) {
+    //リツイートされたposts_idに対し、ログイン者が過去にrtしてるか確認
+    $rts = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
+    $rts->execute(array($_REQUEST['rt'],$member['id']));
+    $rt = $rts->fetch();
+    //rt_ineした事がある
+    if($rt){
+        //現在のrtの値を確認し、スイッチさせる
+        if($rt['rt'] == 1) {
+            $rt = $db->prepare('UPDATE rt_ine SET rt=0, created=NOW() WHERE member_id=? AND posts_id=?');
+            $rt->execute(array(
+                $member['id'],
+                $_REQUEST['rt']
+            ));
+        } else {
+            $rt = $db->prepare('UPDATE rt_ine SET rt=1, created=NOW() WHERE member_id=? AND posts_id=?');
+            $rt->execute(array(
+                $member['id'],
+                $_REQUEST['rt']
+            ));
+        }
+    //rt_ineした事がない
+    } else {
+        //レコード追加
+        $rts = $db->prepare('INSERT INTO rt_ine SET member_id=?, posts_id=?,rt=1,ine=0,created=NOW()');
+        $rts->execute(array(
+            $member['id'],
+            $_REQUEST['rt']
+        ));
+    }
+}
+
+
 
 
 //投稿を記録する！
@@ -201,7 +235,7 @@ function makeLink($value) {
                 <?php endif; ?>
 
                 <p class="like_rt">
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet 1</a>
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet <?php if($post['rt_count']): echo($post['rt_count']); endif; ?></a>
                 </p>
             
             </p>
