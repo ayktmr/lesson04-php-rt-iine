@@ -157,6 +157,13 @@ $posts->execute();
         // print_r($rows);
         // print($rows[11]);
 
+//ログイン者が「リツイート」した投稿IDとポストIDを取得（自分がアクション済の色を変えるクラス指定に使用）
+    $rt_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE rt=1 && member_id=?');
+    $rt_posts->execute(array(
+        $member['id']
+    ));
+        $rt_rows = $rt_posts->fetchAll(PDO::FETCH_KEY_PAIR);
+
 
 
 //返信の場合！
@@ -235,7 +242,7 @@ function makeLink($value) {
                 <?php endif; ?>
 
                 <p class="like_rt">
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?rt=<?php echo h($post['id']); ?>" class="done_rt">Retweet <?php if($post['rt_count']): echo($post['rt_count']); endif; ?></a>
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($post['id']); ?>" <?php if(isset($rt_rows[$post['id']])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if($post['rt_count']): echo($post['rt_count']); endif; ?></a>
                 </p>
             
             </p>
