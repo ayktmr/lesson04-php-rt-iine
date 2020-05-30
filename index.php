@@ -59,12 +59,14 @@ if(isset($_REQUEST['rt'])) {
     //rt_ineした事がある
     if($rt){
         //現在のrtの値を確認し、スイッチさせる
+        //・既にrtしてるpostなのでrtを取り消す
         if($rt['rt'] == 1) {
             $rt = $db->prepare('UPDATE rt_ine SET rt=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
                 $member['id'],
                 $_REQUEST['rt']
             ));
+        //・まだrtしてないのでrtする
         } else {
             $rt = $db->prepare('UPDATE rt_ine SET rt=1, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
@@ -74,10 +76,34 @@ if(isset($_REQUEST['rt'])) {
         }
     //rt_ineした事がない
     } else {
-        //レコード追加
+        //rt_ineテーブルにレコード追加
         $rts = $db->prepare('INSERT INTO rt_ine SET member_id=?, posts_id=?,rt=1,ine=0,created=NOW()');
         $rts->execute(array(
             $member['id'],
+            $_REQUEST['rt']
+        ));
+        //postsテーブルにリツイートしたレコード複製retweet_idを付与し追加
+        $rt_copy = $db->prepare(
+            'INSERT INTO posts(
+                message,
+                member_id,
+                reply_post_id,
+                retweet_post_id,
+                delete_flg,
+                created
+            )
+            SELECT 
+                message,
+                member_id,
+                reply_post_id,
+                id=?,
+                delete_flg,
+                NOW()
+            FROM posts 
+            WHERE id=?'
+        );
+        $rt_copy->execute(array(
+            $_REQUEST['rt'],
             $_REQUEST['rt']
         ));
     }
@@ -93,7 +119,7 @@ if(!empty($_POST)) {
         if(is_null($_POST['reply_post_id']) OR isset($_POST['reply_post_id'])){ 
             $_POST['reply_post_id'] = 0;
         }
-        $message = $db->prepare('INSERT INTO posts SET member_id=?, message=?, reply_post_id=?, created=NOW()');
+        $message = $db->prepare('INSERT INTO posts SET member_id=?, message=?, reply_post_id=?,retweet=?, delete_flg=0, created=NOW()');
         $message->execute(array(
             $member['id'],
             $_POST['message'],
@@ -115,19 +141,16 @@ if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
 $page = max($page, 1);
 
     //最終ページを取得する
-    // $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
-    $counts = $db->query(
-        'SELECT p.id, r.rt FROM members m, posts p LEFT JOIN rt_ine r ON p.id=r.posts_id WHERE m.id=p.member_id GROUP BY p.id, r.rt'
-    );
-    $counts->execute();
-    $countPage = $counts->rowCount();
-    $maxPage = ceil($countPage / 5);
+    $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
+    $cnt = $counts->fetch();
+    $maxPage = ceil($cnt['cnt'] / 5);
     $page = min($page, $maxPage);
-    // $cnt = $counts->fetch();
-    // $maxPage = ceil($cnt['cnt'] / 5);
-    // $page = min($page, $maxPage);
 
     $start = ($page - 1) * 5;
+
+    $posts = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id ORDER BY p.created DESC LIMIT ?, 5');
+    $posts->bindParam(1, $start, PDO::PARAM_INT);
+    $posts->execute();
 
 //投稿取得
 //・・・・＆いいね＆リツイート数のカウント取得(３つのテーブルのリレーションP192参照)
@@ -141,7 +164,6 @@ $posts = $db->prepare(
         p.reply_post_id,
         p.created,
         p.modified,
-        r.rt,
         SUM(r.rt) AS rt_count,
         SUM(r.ine) AS ine_count
      FROM 
@@ -150,7 +172,7 @@ $posts = $db->prepare(
      WHERE 
         m.id=p.member_id
      GROUP BY 
-        p.id, r.rt
+        p.id
      ORDER BY p.created
      DESC LIMIT ?, 5'
      );
@@ -173,12 +195,14 @@ $posts->execute();
         $rt_rows = $rt_posts->fetchAll(PDO::FETCH_KEY_PAIR);
 
 //リツイートの場合
-if(isset($_REQUEST['rt'])){
-    $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
-    $response->execute(array(
-        $_REQUEST['rt']
-    ));
-}
+// if(isset($_REQUEST['rt'])){
+//     $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
+//     $response->execute(array(
+//         $_REQUEST['rt']
+//     ));
+//     header('Location: index.php?message=retweet');
+//     exit();
+// }
 
 
 
@@ -240,6 +264,7 @@ function makeLink($value) {
         <?php foreach ($posts as $post): ?>
 
             <div class="msg">
+                <p class="day">〇〇さんがリツイート</p>
                 <img src="member_picture/<?php echo h($post['picture']); ?>" width="48" height="48" alt="<?php echo h($post['name']); ?>" />
                 <p><?php echo makeLink(h($post['message'])); ?><span class="name">（<?php echo h($post['name']); ?>）</span>
                 [<a href="index.php?res=<?php echo h($post['id']); ?>">Re</a>]</p>
