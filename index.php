@@ -41,7 +41,7 @@ if(isset($_REQUEST['ine'])) {
         }
     //rt_ineした事がない
     } else {
-        //レコード追加
+        //rt_ineTABLEにレコード追加(ineにフラグたてる)
         $ines = $db->prepare('INSERT INTO rt_ine SET member_id=?, posts_id=?,rt=0,ine=1,created=NOW()');
         $ines->execute(array(
             $member['id'],
@@ -52,29 +52,42 @@ if(isset($_REQUEST['ine'])) {
 
 //「リツイート」ボタン押した時！
 if(isset($_REQUEST['rt'])) {
-    //リツイートされたposts_idに対し、ログイン者が過去にrtしてるか確認
+    //リツイートされたposts_idに対し、ログイン者が過去にリツイートしてるか確認
     $rts = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
     $rts->execute(array($_REQUEST['rt'],$member['id']));
     $rt = $rts->fetch();
-    //rt_ineした事がある
+    //rt_ineした事がある（現在のrtの値を確認し、スイッチさせる）---------------------------------------
     if($rt){
-        //現在のrtの値を確認し、スイッチさせる
-        //・既にrtしてるpostなのでrtを取り消す
+        //rtフラグが１の時（今リツイート中である）
         if($rt['rt'] == 1) {
+            //リツイートを取り消す（rt_ineTABLE：rt=0にする）
             $rt = $db->prepare('UPDATE rt_ine SET rt=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
                 $member['id'],
                 $_REQUEST['rt']
             ));
-        //・まだrtしてないのでrtする
+            //デリート処理をする（postsTABLE：delete_flg=1にする）
+            $rt = $db->prepare('UPDATE posts SET delete_flg=1, created=NOW() WHERE member_id=? AND retweet_post_id=?');
+            $rt->execute(array(
+                $member['id'],
+                $_REQUEST['rt']
+            ));
+        //rtフラグが０の時（今リツイートしていない）
         } else {
+            //リツイートする（rt_ineTABLE：rt=1にする）
             $rt = $db->prepare('UPDATE rt_ine SET rt=1, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
                 $member['id'],
                 $_REQUEST['rt']
             ));
+            //デリートを取り消す（postsTABLE：delete_flg=0にする）
+            $rt = $db->prepare('UPDATE posts SET delete_flg=0, created=NOW() WHERE member_id=? AND retweet_post_id=?');
+            $rt->execute(array(
+                $member['id'],
+                $_REQUEST['rt']
+            ));
         }
-    //rt_ineした事がない
+    //rt_ineした事がない--------------------------------------------------------------------
     } else {
         //rt_ineテーブルにレコード追加
         $rts = $db->prepare('INSERT INTO rt_ine SET member_id=?, posts_id=?,rt=1,ine=0,created=NOW()');
@@ -82,34 +95,29 @@ if(isset($_REQUEST['rt'])) {
             $member['id'],
             $_REQUEST['rt']
         ));
-        //postsテーブルにリツイートしたレコード複製retweet_idを付与し追加
-        $rt_copy = $db->prepare(
-            'INSERT INTO posts(
-                message,
-                member_id,
-                reply_post_id,
-                retweet_post_id,
-                delete_flg,
-                created
-            )
-            SELECT 
-                message,
-                member_id,
-                reply_post_id,
-                id=?,
-                delete_flg,
-                NOW()
-            FROM posts 
-            WHERE id=?'
-        );
-        $rt_copy->execute(array(
-            $_REQUEST['rt'],
+        //postsテーブルにリツイートしたレコードに、retweet_idを付与し複製
+        $rt_add_orig = $db->prepare('SELECT * FROM posts WHERE id=?');
+        $rt_add_orig->execute(array($_REQUEST['rt']));
+        $rt_add_orig = $rt_add_orig->fetch();
+
+        $rt_add = $db->prepare(
+            'INSERT INTO posts
+             SET 
+                message=?,
+                member_id=?,
+                reply_post_id=?,
+                retweet_post_id=?,
+                delete_flg=0,
+                created=NOW()'
+            );
+        $rt_add->execute(array(
+            $rt_add_orig['message'],
+            $member['id'],
+            $rt_add_orig['reply_post_id'],
             $_REQUEST['rt']
         ));
     }
 }
-
-
 
 
 //投稿を記録する！
@@ -119,7 +127,16 @@ if(!empty($_POST)) {
         if(is_null($_POST['reply_post_id']) OR isset($_POST['reply_post_id'])){ 
             $_POST['reply_post_id'] = 0;
         }
-        $message = $db->prepare('INSERT INTO posts SET member_id=?, message=?, reply_post_id=?,retweet=?, delete_flg=0, created=NOW()');
+        $message = $db->prepare(
+            'INSERT INTO posts
+             SET 
+                member_id=?, 
+                message=?, 
+                reply_post_id=?,
+                retweet_post_id=0, 
+                delete_flg=0, 
+                created=NOW()'
+            );
         $message->execute(array(
             $member['id'],
             $_POST['message'],
