@@ -20,8 +20,8 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
 //「いいね」ボタン押した時！
 if(isset($_REQUEST['ine'])) {
     //ineされたposts_idに対し、ログイン者が過去にineしてるか確認
-    $ines = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
-    $ines->execute(array($_REQUEST['ine'],$member['id']));
+    $ines = $db->prepare('SELECT * FROM rt_ine WHERE member_id=? AND posts_id=?');
+    $ines->execute(array($member['id'], $_REQUEST['ine']));
     $ine = $ines->fetch();
     //rt_ineした事がある
     if($ine){
@@ -53,8 +53,8 @@ if(isset($_REQUEST['ine'])) {
 //「リツイート」ボタン押した時！
 if(isset($_REQUEST['rt'])) {
     //リツイートされたposts_idに対し、ログイン者が過去にリツイートしてるか確認
-    $rts = $db->prepare('SELECT * FROM rt_ine WHERE posts_id=? AND member_id=?');
-    $rts->execute(array($_REQUEST['rt'],$member['id']));
+    $rts = $db->prepare('SELECT * FROM rt_ine WHERE member_id=? AND posts_id=?');
+    $rts->execute(array($member['id'], $_REQUEST['rt']));
     $rt = $rts->fetch();
     //rt_ineした事がある（現在のrtの値を確認し、スイッチさせる）---------------------------------------
     if($rt){
@@ -67,7 +67,7 @@ if(isset($_REQUEST['rt'])) {
                 $_REQUEST['rt']
             ));
             //デリート処理をする（postsTABLE：delete_flg=1にする）
-            $rt = $db->prepare('UPDATE posts SET delete_flg=1, created=NOW() WHERE member_id=? AND retweet_post_id=?');
+            $rt = $db->prepare('UPDATE posts SET delete_flg=1, created=NOW() WHERE retweet_member_id=? AND retweet_post_id=?');
             $rt->execute(array(
                 $member['id'],
                 $_REQUEST['rt']
@@ -81,7 +81,7 @@ if(isset($_REQUEST['rt'])) {
                 $_REQUEST['rt']
             ));
             //デリートを取り消す（postsTABLE：delete_flg=0にする）
-            $rt = $db->prepare('UPDATE posts SET delete_flg=0, created=NOW() WHERE member_id=? AND retweet_post_id=?');
+            $rt = $db->prepare('UPDATE posts SET delete_flg=0, created=NOW() WHERE retweet_member_id=? AND retweet_post_id=?');
             $rt->execute(array(
                 $member['id'],
                 $_REQUEST['rt']
@@ -107,14 +107,16 @@ if(isset($_REQUEST['rt'])) {
                 member_id=?,
                 reply_post_id=?,
                 retweet_post_id=?,
+                retweet_member_id=?,
                 delete_flg=0,
                 created=NOW()'
             );
         $rt_add->execute(array(
             $rt_add_orig['message'],
-            $member['id'],
+            $rt_add_orig['member_id'],
             $rt_add_orig['reply_post_id'],
-            $_REQUEST['rt']
+            $_REQUEST['rt'],
+            $member['id']
         ));
     }
 }
@@ -133,7 +135,8 @@ if(!empty($_POST)) {
                 member_id=?, 
                 message=?, 
                 reply_post_id=?,
-                retweet_post_id=0, 
+                retweet_post_id=0,
+                retweet_member_id=0,
                 delete_flg=0, 
                 created=NOW()'
             );
@@ -146,8 +149,8 @@ if(!empty($_POST)) {
         header('Location: index.php');
         exit();
     }
-
 }
+
 
 //投稿を取得する！
 if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
@@ -179,15 +182,15 @@ $posts = $db->prepare(
         p.message,
         p.member_id,
         p.reply_post_id,
+        p.retweet_post_id,
+        p.retweet_member_id,
         p.created,
-        p.modified,
-        SUM(r.rt) AS rt_count,
-        SUM(r.ine) AS ine_count
+        p.modified
      FROM 
         members m,
-        posts p LEFT JOIN rt_ine r ON p.id=r.posts_id
+        posts p
      WHERE 
-        m.id=p.member_id
+        m.id=p.member_id AND delete_flg=0
      GROUP BY 
         p.id
      ORDER BY p.created
@@ -197,30 +200,48 @@ $posts->bindParam(1, $start, PDO::PARAM_INT);
 $posts->execute();
 
 
-//ログイン者が「いいね」した投稿IDとポストIDを取得（自分がアクション済の色を変えるクラス指定に使用）
+//ログイン者が「いいね」した投稿IDとポストIDを取得（ボタン色を変えるクラス指定に使用）
     $ine_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE ine=1 && member_id=?');
     $ine_posts->execute(array(
         $member['id']
     ));
         $rows = $ine_posts->fetchAll(PDO::FETCH_KEY_PAIR);
+        //print_r($rows);
 
-//ログイン者が「リツイート」した投稿IDとポストIDを取得（自分がアクション済の色を変えるクラス指定に使用）
+//ログイン者が「リツイート」した投稿IDとポストIDを取得（ボタン色を変えるクラス指定に使用）
     $rt_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE rt=1 && member_id=?');
     $rt_posts->execute(array(
         $member['id']
     ));
         $rt_rows = $rt_posts->fetchAll(PDO::FETCH_KEY_PAIR);
+        //print_r($rt_rows);
 
-//リツイートの場合
-// if(isset($_REQUEST['rt'])){
-//     $response = $db->prepare('SELECT m.name, m.picture, p.* FROM members m, posts p WHERE m.id=p.member_id AND p.id=? ORDER BY p.created DESC');
-//     $response->execute(array(
-//         $_REQUEST['rt']
-//     ));
-//     header('Location: index.php?message=retweet');
-//     exit();
-// }
+//リツイートされたポストには元のカウントを表示したいので、リツイートされてるIDを配列へ入れておく
+    $rt_cnt_orig = $db->query(
+        'SELECT 
+            id,
+            retweet_post_id
+        FROM 
+            posts
+        WHERE 
+            retweet_post_id > 0'
+        );
+    $rt_cnt_orig = $rt_cnt_orig->fetchAll(PDO::FETCH_KEY_PAIR);
+    //print_r($rt_cnt_orig);
 
+    //いいね＆リツイートカウント数を配列に入れておく
+    $cnt_f_retweet = $db->query(
+        'SELECT 
+            posts_id,
+            SUM(rt) AS cnt_rt,
+            SUM(ine) AS cnt_ine
+         FROM 
+            rt_ine
+         GROUP BY 
+            posts_id'
+    );
+    $cnt_f_retweet = $cnt_f_retweet->fetchAll(PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE);
+    //print_r($cnt_f_retweet);
 
 
 //返信の場合！
@@ -281,26 +302,49 @@ function makeLink($value) {
         <?php foreach ($posts as $post): ?>
 
             <div class="msg">
-                <p class="day">〇〇さんがリツイート</p>
+                <?php if($post['retweet_post_id']>0): echo '<p class="day">&#8811;' . h($post['retweet_member_id']) . 'さんがリツイート</p>'; endif; //リツイートの時だけ表示 ?>
+
                 <img src="member_picture/<?php echo h($post['picture']); ?>" width="48" height="48" alt="<?php echo h($post['name']); ?>" />
                 <p><?php echo makeLink(h($post['message'])); ?><span class="name">（<?php echo h($post['name']); ?>）</span>
-                [<a href="index.php?res=<?php echo h($post['id']); ?>">Re</a>]</p>
-                <p class="day"><a href="view.php?id=<?php echo h($post['id']); ?>"><?php echo h($post['created']); ?></a>
-            
+
+                <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時 ?>
+                    [<a href="index.php?res=<?php echo h($rt_cnt_orig[$post['id']]); ?>">Re</a>]</p>
+                    <p class="day"><a href="view.php?id=<?php echo h($rt_cnt_orig[$post['id']]); ?>"><?php echo h($post['created']); ?></a>
+                <?php else: //通常ポストの時?>
+                    [<a href="index.php?res=<?php echo h($post['id']); ?>">Re</a>]</p>
+                    <p class="day"><a href="view.php?id=<?php echo h($post['id']); ?>"><?php echo h($post['created']); ?></a>
+                <?php endif; ?>
+
+
                 <?php if($post['reply_post_id'] > 0): ?>
-
-                    <a href="view.php?id=<?php echo h($post['reply_post_id']); ?>">返信元のメッセージ</a>
-
+                    <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時 ?>
+                        <a href="view.php?id=<?php echo h($rt_cnt_orig[$post['id']]); ?>">返信元のメッセージ</a>
+                    <?php else: //通常ポストの時?>
+                        <a href="view.php?id=<?php echo h($post['reply_post_id']); ?>">返信元のメッセージ</a>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if($_SESSION['id'] == $post['member_id']): ?>
-
-                    [<a href="delete.php?id=<?php echo h($post['id']); ?>" style="color:#f33;">削除</a>]
-
+                    <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時 ?>
+                        [<a href="delete.php?id=<?php echo h($rt_cnt_orig[$post['id']]); ?>" style="color:#f33;">削除</a>]
+                    <?php else: //通常ポストの時?>
+                        [<a href="delete.php?id=<?php echo h($post['id']); ?>" style="color:#f33;">削除</a>]
+                    <?php endif; ?>
                 <?php endif; ?>
 
+                <!-- いいね・リツイートのボタン表示 -->
                 <p class="like_rt">
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if($post['ine_count']): echo($post['ine_count']); endif; ?></a>　<a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($post['id']); ?>" <?php if(isset($rt_rows[$post['id']])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if($post['rt_count']): echo($post['rt_count']); endif; ?></a>
+                <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時(ine) ?> 
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']) && $cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']!=0): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']); endif; ?></a>　
+                <?php else: //通常ポストの時 ?>
+                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$post['id']]['cnt_ine'])): echo($cnt_f_retweet[$post['id']]['cnt_ine']); endif; ?></a>　
+                <?php endif; ?>
+
+                <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時(rt) ?> 
+                    <a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rt_rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt'])): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']); endif; ?></a>
+                <?php else: //通常ポストの時 ?>
+                    <a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($post['id']); ?>" <?php if(isset($rt_rows[$post['id']])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$post['id']]['cnt_rt'])): echo($cnt_f_retweet[$post['id']]['cnt_rt']); endif; ?></a>
+                <?php endif; ?>
                 </p>
             
             </p>
