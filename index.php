@@ -242,6 +242,9 @@ $posts->execute();
     $cnt_f_retweet = $cnt_f_retweet->fetchAll(PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE);
     //print_r($cnt_f_retweet);
 
+    //リツイート者をIDではなくNAMEで表示させるためにmembersを配列に入れておく
+    $rt_id_name = $db->query('SELECT id, name FROM members');
+    $rt_id_name = $rt_id_name->fetchAll(PDO::FETCH_KEY_PAIR);
 
 //返信の場合！
 if(isset($_REQUEST['res'])) {
@@ -301,7 +304,7 @@ function makeLink($value) {
         <?php foreach ($posts as $post): ?>
 
             <div class="msg">
-                <?php if($post['retweet_post_id']>0): echo '<p class="day">&#8811;' . h($post['retweet_member_id']) . 'さんがリツイート</p>'; endif; //リツイートの時だけ表示 ?>
+                <?php if($post['retweet_post_id']>0): echo '<p class="day">&#8811;' . h($rt_id_name[$post['retweet_member_id']]) . 'さんがリツイート</p>'; endif; //リツイートの時だけ表示 ?>
 
                 <img src="member_picture/<?php echo h($post['picture']); ?>" width="48" height="48" alt="<?php echo h($post['name']); ?>" />
                 <p><?php echo makeLink(h($post['message'])); ?><span class="name">（<?php echo h($post['name']); ?>）</span>
