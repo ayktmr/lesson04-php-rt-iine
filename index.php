@@ -161,7 +161,7 @@ if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
 $page = max($page, 1);
 
     //最終ページを取得する
-    $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts');
+    $counts = $db->query('SELECT COUNT(*) AS cnt FROM posts WHERE delete_flg=0');
     $cnt = $counts->fetch();
     $maxPage = ceil($cnt['cnt'] / 5);
     $page = min($page, $maxPage);
