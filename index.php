@@ -95,7 +95,7 @@ if(isset($_REQUEST['rt'])) {
             $member['id'],
             $_REQUEST['rt']
         ));
-        //postsテーブルにリツイートしたレコードに、retweet_idを付与し複製
+        //postsテーブルにリツイートしたレコードを複製、その際、retweet_idを付与する
         $rt_add_orig = $db->prepare('SELECT * FROM posts WHERE id=?');
         $rt_add_orig->execute(array($_REQUEST['rt']));
         $rt_add_orig = $rt_add_orig->fetch();
@@ -173,7 +173,6 @@ $page = max($page, 1);
     $posts->execute();
 
 //投稿取得
-//・・・・＆いいね＆リツイート数のカウント取得(３つのテーブルのリレーションP192参照)
 $posts = $db->prepare(
     'SELECT 
         m.name,
