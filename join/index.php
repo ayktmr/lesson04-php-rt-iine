@@ -30,6 +30,11 @@ if(!empty($_POST)) {
         $image_none = 'none.jpg';
     }
 
+    //正しいメールアドレスの形式かチェック
+    if (!preg_match("/^([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\._-]+)+$/", $_POST["email"])) {
+        $error['email'] = 'email_error';
+    }
+
     //重複アカウント（メールアドレス）のチェック
     if(empty($error)) {
         $member = $db->prepare('SELECT COUNT(*) AS cnt FROM members WHERE email=?');
@@ -53,7 +58,7 @@ if(!empty($_POST)) {
         $_SESSION['join']['image'] = $image;
         header('Location: check.php');
         exit();
-    } if (!empty($image_none)) {
+    } if (empty($error) && !empty($image_none)) {
         $_SESSION['join'] = $_POST;
         $_SESSION['join']['image'] = $image_none;
         header('Location: check.php');
@@ -102,6 +107,10 @@ if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'rewrite') {
                 <input type="text" name="email" size="35" maxlength="255" value="<?php if(isset($_POST['email'])): echo htmlspecialchars($_POST['email'], ENT_QUOTES); endif; ?>" />
                 <?php if(isset($error['email']) && $error['email'] == 'blank'): ?>
                     <p class="error">※　メールアドレスを入力してください</p>
+                <?php endif; ?>
+
+                <?php if(isset($error['email']) && $error['email'] == 'email_error'): ?>
+                    <p class="error">※　正しいメールアドレスを入力してください</p>
                 <?php endif; ?>
 
                 <?php if(isset($error['email']) && $error['email'] == 'duplicate'): ?>
