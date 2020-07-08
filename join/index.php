@@ -19,11 +19,15 @@ if(!empty($_POST)) {
     //アップロードされたファイル名を代入する
     $fileName = $_FILES['image']['name'];
     //画像が指定されているか確認、指定されてれば拡張子のチェックをする
+    $image_none = NULL; //画像がアップロードされない時用の変数、初期化しておく
     if (!empty($fileName)) {
         $ext = substr($fileName, -3);
         if ($ext != 'jpg' && $ext != 'gif'){
             $error['image'] = 'type';
         }
+    //画像が指定されていなければ、noneを代入
+    } else {
+        $image_none = 'none.jpg';
     }
 
     //重複アカウント（メールアドレス）のチェック
@@ -36,7 +40,7 @@ if(!empty($_POST)) {
         }
     }
 
-    if (empty($error)) {
+    if (empty($error) && empty($image_none)) {
         //画像をアップロードする(画像名には、他との重複さけるためUPLOADした日時を付与）
         $image = date('YmdHis') . $_FILES['image']['name'];
         move_uploaded_file($_FILES['image']['tmp_name'], '../member_picture/' . $image);
@@ -44,9 +48,14 @@ if(!empty($_POST)) {
 
 
     //error配列が空か確認し、エラーがなければSESSIONに値を保存しcheck.phpへ移動
-    if (empty($error)) {
+    if (empty($error) && empty($image_none)) {
         $_SESSION['join'] = $_POST;
         $_SESSION['join']['image'] = $image;
+        header('Location: check.php');
+        exit();
+    } if (!empty($image_none)) {
+        $_SESSION['join'] = $_POST;
+        $_SESSION['join']['image'] = $image_none;
         header('Location: check.php');
         exit();
     }
