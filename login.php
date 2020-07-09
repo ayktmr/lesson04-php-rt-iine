@@ -25,7 +25,7 @@ if(!empty($_POST)) {
         $_SESSION['time'] = time();
 
             //loginに成功したのち、次回から自動的にログインするにチェックが入っていれば、その情報をCOOKIEに保存する
-            if($_POST['save'] == 'on') {
+            if(isset($_POST['save']) && $_POST['save'] === 'on') {
                 setcookie('email' . $_POST['email'], time()+60*60*24*14);
                 setcookie('password', $_POST['password'], time()+60*60*24*14);
             }
