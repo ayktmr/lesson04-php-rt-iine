@@ -17,6 +17,31 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
 }
 
 
+//「リツイートいいね」パラメータ値のチェック
+if(isset($_REQUEST['ine'])){
+    $ine_ck = mb_convert_kana($_REQUEST['ine'], 'n', 'UTF-8');
+    if(!is_numeric($ine_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+if(isset($_REQUEST['rt'])){
+    $rt_ck = mb_convert_kana($_REQUEST['rt'], 'n', 'UTF-8');
+    if(!is_numeric($rt_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+//ページ数のパラメータ値チェック
+if(isset($_REQUEST['page'])){
+    $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
+    if(!is_numeric($page_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+
+
 //「いいね」ボタン押した時！
 if(isset($_REQUEST['ine'])) {
     //ineされたposts_idに対し、ログイン者が過去にineしてるか確認
@@ -349,15 +374,15 @@ function makeLink($value) {
                 <!-- いいね・リツイートのボタン表示 -->
                 <p class="like_rt">
                 <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時(ine) ?> 
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']) && $cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']!=0): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']); endif; ?></a>　
+                    <a href="index.php?page=<?php echo h($page); ?>&ine=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']) && $cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']!=0): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_ine']); endif; ?></a>　
                 <?php else: //通常ポストの時 ?>
-                    <a href="index.php?page=<?php echo($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$post['id']]['cnt_ine']) &&$cnt_f_retweet[$post['id']]['cnt_ine']!=0): echo($cnt_f_retweet[$post['id']]['cnt_ine']); endif; ?></a>　
+                    <a href="index.php?page=<?php echo h($page); ?>&ine=<?php echo h($post['id']); ?>" <?php if(isset($rows[$post['id']])): echo 'class="done_ine"'; endif; ?>>&hearts; <?php if(isset($cnt_f_retweet[$post['id']]['cnt_ine']) &&$cnt_f_retweet[$post['id']]['cnt_ine']!=0): echo($cnt_f_retweet[$post['id']]['cnt_ine']); endif; ?></a>　
                 <?php endif; ?>
 
                 <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時(rt) ?> 
-                    <a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rt_rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']) && $cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']!=0): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']); endif; ?></a>
+                    <a href="index.php?page=<?php echo h($page); ?>&rt=<?php echo h($rt_cnt_orig[$post['id']]); ?>" <?php if(isset($rt_rows[$rt_cnt_orig[$post['id']]])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']) && $cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']!=0): echo h($cnt_f_retweet[$rt_cnt_orig[$post['id']]]['cnt_rt']); endif; ?></a>
                 <?php else: //通常ポストの時 ?>
-                    <a href="index.php?page=<?php echo($page); ?>&rt=<?php echo h($post['id']); ?>" <?php if(isset($rt_rows[$post['id']])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$post['id']]['cnt_rt']) && $cnt_f_retweet[$post['id']]['cnt_rt']!=0): echo($cnt_f_retweet[$post['id']]['cnt_rt']); endif; ?></a>
+                    <a href="index.php?page=<?php echo h($page); ?>&rt=<?php echo h($post['id']); ?>" <?php if(isset($rt_rows[$post['id']])): echo 'class="done_rt"'; endif; ?>>Retweet <?php if(isset($cnt_f_retweet[$post['id']]['cnt_rt']) && $cnt_f_retweet[$post['id']]['cnt_rt']!=0): echo($cnt_f_retweet[$post['id']]['cnt_rt']); endif; ?></a>
                 <?php endif; ?>
                 </p>
             
