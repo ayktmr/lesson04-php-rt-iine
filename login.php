@@ -68,11 +68,11 @@ if(!empty($_POST)) {
                 <dt>メールアドレス</dt>
                 <dd>
                     <input type="text" name="email" size="35" maxlength="255" value="<?php if(isset($_POST['email'])): echo htmlspecialchars($_POST['email'], ENT_QUOTES); endif; ?>" />
-                    <?php if(isset($error['login']) && $error['login'] == 'blank'): ?>
+                    <?php if(isset($error['login']) && $error['login'] === 'blank'): ?>
                     <p class="error">※　メールアドレスとパスワードをご記入ください</p>
                     <?php endif; ?>
 
-                    <?php if(isset($error['login']) && $error['login'] == 'failed'): ?>
+                    <?php if(isset($error['login']) && $error['login'] === 'failed'): ?>
                     <p class="error">※　ログインに失敗しました。正しくご記入下さい</p>
                     <?php endif; ?>
                 </dd>

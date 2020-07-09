@@ -51,7 +51,7 @@ if(isset($_REQUEST['ine'])) {
     //rt_ineした事がある
     if($ine){
         //現在のineの値を確認し、スイッチさせる
-        if($ine['ine'] == 1) {
+        if($ine['ine'] === 1) {
             $ine = $db->prepare('UPDATE rt_ine SET ine=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $ine->execute(array(
                 $member['id'],
@@ -90,7 +90,7 @@ if(isset($_REQUEST['rt'])) {
     //rt_ineした事がある（現在のrtの値を確認し、スイッチさせる）---------------------------------------
     if($rt){
         //rtフラグが１の時（今リツイート中である）
-        if($rt['rt'] == 1) {
+        if($rt['rt'] === 1) {
             //リツイートを取り消す（rt_ineTABLE：rt=0にする）
             $rt = $db->prepare('UPDATE rt_ine SET rt=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
@@ -190,7 +190,7 @@ if(!empty($_POST)) {
 
 
 //投稿を取得する！
-if(!isset($_REQUEST['page']) || $_REQUEST['page'] == ''){
+if(!isset($_REQUEST['page']) || $_REQUEST['page'] === ''){
     $page = 1;
 } else {
     $page = $_REQUEST['page'];
@@ -363,7 +363,7 @@ function makeLink($value) {
                     <?php endif; ?>
                 <?php endif; ?>
 
-                <?php if($_SESSION['id'] == $post['member_id']): ?>
+                <?php if($_SESSION['id'] === $post['member_id']): ?>
                     <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時 ?>
                         [<a href="delete.php?id=<?php echo h($rt_cnt_orig[$post['id']]); ?>" style="color:#f33;">削除</a>]
                     <?php else: //通常ポストの時?>
@@ -394,12 +394,12 @@ function makeLink($value) {
         <ul class="paging">
 
             <?php if($page > 1) { ?>
-                <li><a href="index.php?page=<?php print($page - 1); ?>">前のページへ</a></li>
+                <li><a href="index.php?page=<?php echo($page - 1); ?>">前のページへ</a></li>
             <?php } else { ?>
                 <li>前のページへ</li>
             <?php } ?>
             <?php if($page < $maxPage) { ?>
-                <li><a href="index.php?page=<?php print($page + 1); ?>">次のページへ</a></li>
+                <li><a href="index.php?page=<?php echo($page + 1); ?>">次のページへ</a></li>
             <?php } else { ?>
                 <li>次のページへ</li>
             <?php } ?>
