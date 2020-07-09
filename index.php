@@ -32,12 +32,18 @@ if(isset($_REQUEST['ine'])) {
                 $member['id'],
                 $_REQUEST['ine']
             ));
+            //リロード時の再実行を防ぐ
+            header('Location: index.php');
+            exit();
         } else {
             $ine = $db->prepare('UPDATE rt_ine SET ine=1, created=NOW() WHERE member_id=? AND posts_id=?');
             $ine->execute(array(
                 $member['id'],
                 $_REQUEST['ine']
             ));
+            //リロード時の再実行を防ぐ
+            header('Location: index.php');
+            exit();
         }
     //rt_ineした事がない
     } else {
@@ -72,6 +78,9 @@ if(isset($_REQUEST['rt'])) {
                 $member['id'],
                 $_REQUEST['rt']
             ));
+            //リロード時の再実行を防ぐ
+            header('Location: index.php');
+            exit();
         //rtフラグが０の時（今リツイートしていない）
         } else {
             //リツイートする（rt_ineTABLE：rt=1にする）
@@ -86,6 +95,9 @@ if(isset($_REQUEST['rt'])) {
                 $member['id'],
                 $_REQUEST['rt']
             ));
+            //リロード時の再実行を防ぐ
+            header('Location: index.php');
+            exit();
         }
     //rt_ineした事がない--------------------------------------------------------------------
     } else {
