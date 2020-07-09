@@ -10,7 +10,8 @@ if(!isset($_SESSION['join'])) {
 if(!empty($_POST)) {
     //登録処理をする
     $statement = $db->prepare('INSERT INTO members SET name=?, email=?, password=?, picture=?, created=NOW()');
-    echo $ret = $statement->execute(array(
+    //echo $ret = $statement->execute(array(
+    $ret = $statement->execute(array(
         $_SESSION['join']['name'],
         $_SESSION['join']['email'],
         //パスワードのみ暗号化
