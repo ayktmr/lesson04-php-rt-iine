@@ -20,14 +20,14 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
 //「リツイートいいね」パラメータ値のチェック
 if(isset($_REQUEST['ine'])){
     $ine_ck = mb_convert_kana($_REQUEST['ine'], 'n', 'UTF-8');
-    if(!is_numeric($ine_ck)){
+    if(!preg_match('/^[0-9]+$/',$ine_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
 }
 if(isset($_REQUEST['rt'])){
     $rt_ck = mb_convert_kana($_REQUEST['rt'], 'n', 'UTF-8');
-    if(!is_numeric($rt_ck)){
+    if(!preg_match('/^[0-9]+$/',$rt_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
@@ -35,7 +35,7 @@ if(isset($_REQUEST['rt'])){
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if(!is_numeric($page_ck)){
+    if(!preg_match('/^[0-9]+$/',$page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
