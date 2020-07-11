@@ -100,7 +100,6 @@ $posts->execute();
         $member['id']
     ));
         $rows = $ine_posts->fetchAll(PDO::FETCH_KEY_PAIR);
-        //print_r($rows);
 
 //ログイン者が「リツイート」した投稿IDとポストIDを取得（ボタン色を変えるクラス指定に使用）
     $rt_posts = $db->prepare('SELECT posts_id, id FROM rt_ine WHERE rt=1 && member_id=?');
@@ -108,7 +107,6 @@ $posts->execute();
         $member['id']
     ));
         $rt_rows = $rt_posts->fetchAll(PDO::FETCH_KEY_PAIR);
-        //print_r($rt_rows);
 
 //リツイートされたポストには元のカウントを表示したいので、リツイートされてるIDを配列へ入れておく
     $rt_cnt_orig = $db->query(
@@ -121,7 +119,6 @@ $posts->execute();
             retweet_post_id > 0'
         );
     $rt_cnt_orig = $rt_cnt_orig->fetchAll(PDO::FETCH_KEY_PAIR);
-    //print_r($rt_cnt_orig);
 
     //いいね＆リツイートカウント数を配列に入れておく
     $cnt_f_retweet = $db->query(
@@ -135,7 +132,6 @@ $posts->execute();
             posts_id'
     );
     $cnt_f_retweet = $cnt_f_retweet->fetchAll(PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE);
-    //print_r($cnt_f_retweet);
 
     //リツイート者をIDではなくNAMEで表示させるためにmembersを配列に入れておく
     $rt_id_name = $db->query('SELECT id, name FROM members');
