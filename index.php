@@ -51,7 +51,7 @@ if(isset($_REQUEST['ine'])) {
     //rt_ineした事がある
     if($ine){
         //現在のineの値を確認し、スイッチさせる
-        if($ine['ine'] === 1) {
+        if($ine['ine'] === "1") {
             $ine = $db->prepare('UPDATE rt_ine SET ine=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $ine->execute(array(
                 $member['id'],
@@ -85,12 +85,15 @@ if(isset($_REQUEST['ine'])) {
 if(isset($_REQUEST['rt'])) {
     //リツイートされたposts_idに対し、ログイン者が過去にリツイートしてるか確認
     $rts = $db->prepare('SELECT * FROM rt_ine WHERE member_id=? AND posts_id=?');
-    $rts->execute(array($member['id'], $_REQUEST['rt']));
+    $rts->execute(array(
+        $member['id'],
+        $_REQUEST['rt']
+    ));
     $rt = $rts->fetch();
     //rt_ineした事がある（現在のrtの値を確認し、スイッチさせる）---------------------------------------
     if($rt){
         //rtフラグが１の時（今リツイート中である）
-        if($rt['rt'] === 1) {
+        if($rt['rt'] === "1") {
             //リツイートを取り消す（rt_ineTABLE：rt=0にする）
             $rt = $db->prepare('UPDATE rt_ine SET rt=0, created=NOW() WHERE member_id=? AND posts_id=?');
             $rt->execute(array(
