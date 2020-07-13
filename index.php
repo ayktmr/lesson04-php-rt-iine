@@ -47,6 +47,14 @@ if(!empty($_POST)) {
 }
 
 
+if(isset($_REQUEST['page'])){
+    $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
+    if(!preg_match('/^[0-9]+$/',$page_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+
 //投稿を取得する！
 if(!isset($_REQUEST['page']) || $_REQUEST['page'] === ''){
     $page = 1;
@@ -248,14 +256,14 @@ function makeLink($value) {
         <ul class="paging">
 
             <?php if($page > 1) { ?>
-                <li><a href="index.php?page=<?php echo($page - 1); ?>">前のページへ</a></li>
+                <li><a href="index.php?page=<?php echo($page - 1); ?>"><?php echo($page - 1); ?>ページへ</a></li>
             <?php } else { ?>
-                <li>前のページへ</li>
+                <li>1ページ</li>
             <?php } ?>
             <?php if($page < $maxPage) { ?>
-                <li><a href="index.php?page=<?php echo($page + 1); ?>">次のページへ</a></li>
+                <li><a href="index.php?page=<?php echo($page + 1); ?>"><?php echo($page + 1); ?>ページへ</a></li>
             <?php } else { ?>
-                <li>次のページへ</li>
+                <li><?php echo($page); ?>ページ</li>
             <?php } ?>
 
         </ul>
