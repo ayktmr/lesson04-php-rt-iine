@@ -49,7 +49,7 @@ if(!empty($_POST)) {
 
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if(!preg_match('/^[0-9]+$/',$page_ck)){
+    if(!preg_match("/\A[1-9]{1}\z/",$page_ck) && !preg_match("/\A[1-9][0-9]\z/",$page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
