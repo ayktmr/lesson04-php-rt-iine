@@ -5,14 +5,14 @@ require('dbconnect.php');
 //「リツイートいいね」パラメータ値のチェック
 if(isset($_REQUEST['ine'])){
     $ine_ck = mb_convert_kana($_REQUEST['ine'], 'n', 'UTF-8');
-    if(!preg_match("/\A[1-9]{1}\z/",$ine_ck) && !preg_match("/\A[1-9][0-9][0-9]\z/",$ine_ck)){
+    if(!ctype_digit($ine_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
 }
 if(isset($_REQUEST['rt'])){
     $rt_ck = mb_convert_kana($_REQUEST['rt'], 'n', 'UTF-8');
-    if(!preg_match("/\A[1-9]{1}\z/",$rt_ck) && !preg_match("/\A[1-9][0-9][0-9]\z/",$rt_ck)){
+    if(!ctype_digit($rt_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
@@ -20,7 +20,7 @@ if(isset($_REQUEST['rt'])){
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if(!preg_match("/\A[1-9]{1}\z/",$page_ck) && !preg_match("/\A[1-9][0-9]\z/",$page_ck)){
+    if($page_ck[0]==="0" || !ctype_digit($page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
