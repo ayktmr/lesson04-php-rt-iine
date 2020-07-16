@@ -7,7 +7,7 @@ require_once('functions.php');
 //idのパラメータ値チェック
 if(isset($_REQUEST['id'])){
     $id_ck = mb_convert_kana($_REQUEST['id'], 'n', 'UTF-8');
-    if(v1($id_ck) || v2($id_ck) || v3($id_ck) || !ctype_digit($id_ck)){
+    if(validateInput01($id_ck) || validateInput02($id_ck) || !ctype_digit($id_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }

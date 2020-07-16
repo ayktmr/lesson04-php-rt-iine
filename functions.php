@@ -11,14 +11,10 @@ function makeLink($value) {
 }
 
 //0のみは弾く
-function v1($value) {
+function validateInput01($value) {
     return preg_match('/\A[0]+\z/',$value);
 }
 //頭に0は弾く
-function v2($value) {
+function validateInput02($value) {
     return preg_match('/\A[0]+[0-9]+\z/',$value);
-}
-//3桁以上は弾く
-function v3($value) {
-    return preg_match('/\A[1-9][0-9]{3,}\z/',$value);
 }
