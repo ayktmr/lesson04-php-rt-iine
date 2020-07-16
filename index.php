@@ -39,11 +39,13 @@ if(isset($_POST['res'])){
 }
 //reply_post_id(res(返信))のパラメータ値チェック
 if(isset($_POST['reply_post_id'])){
+    if($_POST['reply_post_id'] !== "none"){
     $reply_post_id_ck = mb_convert_kana($_POST['reply_post_id'], 'n', 'UTF-8');
         if(v1($reply_post_id_ck) || v2($reply_post_id_ck) || v3($reply_post_id_ck) || !ctype_digit($reply_post_id_ck)){
             echo "不正な値が入力されたので中断しました";
             exit();
         }
+    }
 }
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
@@ -58,8 +60,8 @@ if(isset($_REQUEST['page'])){
 //投稿を記録する！
 if(!empty($_POST)) {
     if(isset($_POST['message'])) {
-        //reply_post_idがnullなら０を入れる(DBに登録できない為)
-        if(is_null($_POST['reply_post_id']) OR isset($_POST['reply_post_id'])){ 
+        //reply_post_idが "none" なら0を入れる(DBに登録できない為)
+        if($_POST['reply_post_id'] === "none"){ 
             $_POST['reply_post_id'] = 0;
         }
         $message = $db->prepare(
@@ -222,7 +224,7 @@ function makeLink($value) {
             <dt><?php echo h($member['name']); ?>さん、メッセージをどうぞ！</dt>
             <dd>
                 <textarea name="message" cols="50" rows="5"><?php if(isset($message)): echo h($message); endif; ?></textarea>
-                <input type="hidden" name="reply_post_id" value="<?php echo h($_REQUEST['res']); ?>" />
+                <input type="hidden" name="reply_post_id" value="<?php if(isset($_REQUEST['res'])): echo h($_REQUEST['res']); else: echo h("none"); endif; ?>"/>
             </dd>
         </dl>
         <div>
@@ -246,13 +248,8 @@ function makeLink($value) {
                     <p class="day"><a href="view.php?id=<?php echo h($post['id']); ?>"><?php echo h($post['created']); ?></a>
                 <?php endif; ?>
 
-
                 <?php if($post['reply_post_id'] > 0): ?>
-                    <?php if(isset($rt_cnt_orig[$post['id']])): //リツイートポストの時 ?>
-                        <a href="view.php?id=<?php echo h($rt_cnt_orig[$post['id']]); ?>">返信元のメッセージ</a>
-                    <?php else: //通常ポストの時?>
                         <a href="view.php?id=<?php echo h($post['reply_post_id']); ?>">返信元のメッセージ</a>
-                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if($_SESSION['id'] === $post['member_id']): ?>
