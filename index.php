@@ -1,6 +1,8 @@
 <?php
 session_start();
 require('dbconnect.php');
+require_once('functions.php');
+
 
 //idがセッションに記録されてる＆最後のログインから１時間以内であるか確認
 if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
@@ -16,18 +18,6 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
     exit();
 }
 
-//0のみは弾く
-function v1($value) {
-    return preg_match('/\A[0]+\z/',$value);
-}
-//頭に0は弾く
-function v2($value) {
-    return preg_match('/\A[0]+[0-9]+\z/',$value);
-}
-//3桁以上は弾く
-function v3($value) {
-    return preg_match('/\A[1-9][0-9]{3,}\z/',$value);
-}
 
 //(res(返信))のパラメータ値チェック
 if(isset($_POST['res'])){
@@ -186,16 +176,6 @@ if(isset($_REQUEST['res'])) {
     $message = '@' . $table['name'] . ' ' . $table['message'];
 }
 
-
-// htmlspecialcharsのショートカット
-function h($value) {
-    return htmlspecialchars($value, ENT_QUOTES);
-}
-
-//本文内のURLにリンクを設定する
-function makeLink($value) {
-    return mb_ereg_replace("(https?)(://[[:alnum;]\+\$\;\?\.%,!#~*/:@&=_-]+)", '<A HREF="\1\2">\1\2</a>', $value);
-}
 ?>
 
 
