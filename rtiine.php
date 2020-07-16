@@ -2,17 +2,31 @@
 session_start();
 require('dbconnect.php');
 
+
+//0のみは弾く
+function v1($value) {
+    return preg_match('/\A[0]+\z/',$value);
+}
+//頭に0は弾く
+function v2($value) {
+    return preg_match('/\A[0]+[0-9]+\z/',$value);
+}
+//3桁以上は弾く
+function v3($value) {
+    return preg_match('/\A[1-9][0-9]{3,}\z/',$value);
+}
+
 //「リツイートいいね」パラメータ値のチェック
 if(isset($_REQUEST['ine'])){
     $ine_ck = mb_convert_kana($_REQUEST['ine'], 'n', 'UTF-8');
-    if(!ctype_digit($ine_ck)){
+    if(v1($ine_ck) || v2($ine_ck) || v3($ine_ck) || !ctype_digit($ine_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
 }
 if(isset($_REQUEST['rt'])){
     $rt_ck = mb_convert_kana($_REQUEST['rt'], 'n', 'UTF-8');
-    if(!ctype_digit($rt_ck)){
+    if(v1($rt_ck) || v2($rt_ck) || v3($rt_ck) || !ctype_digit($rt_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
@@ -20,7 +34,7 @@ if(isset($_REQUEST['rt'])){
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if($page_ck[0]==="0" || !ctype_digit($page_ck)){
+    if(v1($page_ck) || v2($page_ck) || v3($page_ck) || !ctype_digit($page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }

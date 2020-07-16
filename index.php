@@ -16,6 +16,44 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
     exit();
 }
 
+//0のみは弾く
+function v1($value) {
+    return preg_match('/\A[0]+\z/',$value);
+}
+//頭に0は弾く
+function v2($value) {
+    return preg_match('/\A[0]+[0-9]+\z/',$value);
+}
+//3桁以上は弾く
+function v3($value) {
+    return preg_match('/\A[1-9][0-9]{3,}\z/',$value);
+}
+
+//(res(返信))のパラメータ値チェック
+if(isset($_POST['res'])){
+    $res_ck = mb_convert_kana($_POST['res'], 'n', 'UTF-8');
+    if(v1($res_ck) || v2($res_ck) || v3($res_ck) || !ctype_digit($res_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+//reply_post_id(res(返信))のパラメータ値チェック
+if(isset($_POST['reply_post_id'])){
+    $reply_post_id_ck = mb_convert_kana($_POST['reply_post_id'], 'n', 'UTF-8');
+        if(v1($reply_post_id_ck) || v2($reply_post_id_ck) || v3($reply_post_id_ck) || !ctype_digit($reply_post_id_ck)){
+            echo "不正な値が入力されたので中断しました";
+            exit();
+        }
+}
+//ページ数のパラメータ値チェック
+if(isset($_REQUEST['page'])){
+    $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
+    if(v1($page_ck) || v2($page_ck) || v3($page_ck) || !ctype_digit($page_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+
 
 //投稿を記録する！
 if(!empty($_POST)) {
@@ -46,14 +84,6 @@ if(!empty($_POST)) {
     }
 }
 
-
-if(isset($_REQUEST['page'])){
-    $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if($page_ck[0]==="0" || !ctype_digit($page_ck)){
-        echo "不正な値が入力されたので中断しました";
-        exit();
-    }
-}
 
 //投稿を取得する！
 if(!isset($_REQUEST['page']) || $_REQUEST['page'] === ''){
