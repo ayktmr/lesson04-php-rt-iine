@@ -11,10 +11,10 @@ function makeLink($value) {
 }
 
 //0のみは弾く
-function validate_one_digits_0($value) {
+function validate_one_digits_zero($value) {
     return preg_match('/\A[0]+\z/',$value);
 }
 //頭に0は弾く
-function validate_head_value_0($value) {
+function validate_head_value_zero($value) {
     return preg_match('/\A[0]+[0-9]+\z/',$value);
 }

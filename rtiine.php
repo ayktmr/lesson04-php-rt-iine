@@ -7,14 +7,14 @@ require_once('functions.php');
 //「リツイートいいね」パラメータ値のチェック
 if(isset($_REQUEST['ine'])){
     $ine_ck = mb_convert_kana($_REQUEST['ine'], 'n', 'UTF-8');
-    if(validate_one_digits_0($ine_ck) || validate_head_value_0($ine_ck) || !ctype_digit($ine_ck)){
+    if(validate_one_digits_zero($ine_ck) || validate_head_value_zero($ine_ck) || !ctype_digit($ine_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
 }
 if(isset($_REQUEST['rt'])){
     $rt_ck = mb_convert_kana($_REQUEST['rt'], 'n', 'UTF-8');
-    if(validate_one_digits_0($rt_ck) || validate_head_value_0($rt_ck) || !ctype_digit($rt_ck)){
+    if(validate_one_digits_zero($rt_ck) || validate_head_value_zero($rt_ck) || !ctype_digit($rt_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
@@ -22,7 +22,7 @@ if(isset($_REQUEST['rt'])){
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if(validate_one_digits_0($page_ck) || validate_head_value_0($page_ck) || !ctype_digit($page_ck)){
+    if(validate_one_digits_zero($page_ck) || validate_head_value_zero($page_ck) || !ctype_digit($page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
