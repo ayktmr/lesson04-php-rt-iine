@@ -1,10 +1,22 @@
 <?php
 session_start();
 require('dbconnect.php');
+require_once('functions.php');
+
 
 if(empty($_REQUEST['id'])) {
     header('Location: index.php');
     exit();
+}
+
+
+//idのパラメータ値チェック
+if(isset($_REQUEST['id'])){
+    $id_ck = mb_convert_kana($_REQUEST['id'], 'n', 'UTF-8');
+    if(validate_one_digits_0($id_ck) || validate_head_value_0($id_ck) || !ctype_digit($id_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
 }
 
 //投稿を取得する

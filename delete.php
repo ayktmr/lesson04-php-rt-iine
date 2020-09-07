@@ -1,6 +1,18 @@
 <?php
 session_start();
 require('dbconnect.php');
+require_once('functions.php');
+
+
+//idのパラメータ値チェック
+if(isset($_REQUEST['id'])){
+    $id_ck = mb_convert_kana($_REQUEST['id'], 'n', 'UTF-8');
+    if(validate_one_digits_0($id_ck) || validate_head_value_0($id_ck) || !ctype_digit($id_ck)){
+        echo "不正な値が入力されたので中断しました";
+        exit();
+    }
+}
+
 
 if(isset($_SESSION['id'])) {
     $id = $_REQUEST['id'];
@@ -11,10 +23,6 @@ if(isset($_SESSION['id'])) {
     $message = $message->fetch();
 
     if($message['member_id'] === $_SESSION['id']) {
-        //削除する！
-        // $del = $db->prepare('DELETE FROM posts WHERE id=?');
-        // $del->execute(array($id));
-
         //デリート処理をする（postsTABLE：delete_flg=1にする）
         $del = $db->prepare('UPDATE posts SET delete_flg=1, created=NOW() WHERE id=? OR retweet_post_id=?');
         $del->execute(array(
@@ -28,5 +36,3 @@ if(isset($_SESSION['id'])) {
 
 header('Location: index.php');
 exit();
-
-?>
