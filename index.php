@@ -22,7 +22,7 @@ if(isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
 //(res(返信))のパラメータ値チェック
 if(isset($_POST['res'])){
     $res_ck = mb_convert_kana($_POST['res'], 'n', 'UTF-8');
-    if(validate_one_digits_0($res_ck) || validate_head_value_0($res_ck) || !ctype_digit($res_ck)){
+    if(validate_one_digits_zero($res_ck) || validate_head_value_zero($res_ck) || !ctype_digit($res_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
@@ -31,7 +31,7 @@ if(isset($_POST['res'])){
 if(isset($_POST['reply_post_id'])){
     if($_POST['reply_post_id'] !== "none"){
     $reply_post_id_ck = mb_convert_kana($_POST['reply_post_id'], 'n', 'UTF-8');
-        if(validate_one_digits_0($reply_post_id_ck) || validate_head_value_0($reply_post_id_ck) || !ctype_digit($reply_post_id_ck)){
+        if(validate_one_digits_zero($reply_post_id_ck) || validate_head_value_zero($reply_post_id_ck) || !ctype_digit($reply_post_id_ck)){
             echo "不正な値が入力されたので中断しました";
             exit();
         }
@@ -40,7 +40,7 @@ if(isset($_POST['reply_post_id'])){
 //ページ数のパラメータ値チェック
 if(isset($_REQUEST['page'])){
     $page_ck = mb_convert_kana($_REQUEST['page'], 'n', 'UTF-8');
-    if(validate_one_digits_0($page_ck) || validate_head_value_0($page_ck) || !ctype_digit($page_ck)){
+    if(validate_one_digits_zero($page_ck) || validate_head_value_zero($page_ck) || !ctype_digit($page_ck)){
         echo "不正な値が入力されたので中断しました";
         exit();
     }
